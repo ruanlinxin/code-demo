@@ -1,0 +1,46 @@
+<html>
+<head>
+    <meta charset="utf-8"/>
+    <script src="https://unpkg.com/pdf-lib"></script>
+</head>
+
+<body>
+<input id="file" type="file" multiple/>
+<button onclick="PDFmerged()">合并</button>
+</body>
+<script>
+    const getFiles = () => Promise.all([...document.querySelector('#file').files].map(item => item.arrayBuffer()))
+
+    async function PDFmerged() {
+        try {
+            const arrayBuffer = await getFiles()
+            console.log('文件arrayBuffer读取成功')
+            const mergedPDF = await PDFLib.PDFDocument.create()
+            console.log('初始化实例')
+            for (const pdfBytes of arrayBuffer) {
+                console.log('arrayBuffer转pdf-lib实例')
+                const pdf = await PDFLib.PDFDocument.load(pdfBytes);
+                console.log('提取所有页面')
+                const pages = await mergedPDF.copyPages(pdf, pdf.getPageIndices());
+                console.log('循环页面插入初始化的实例')
+                pages.forEach((page) => {
+                    mergedPDF.addPage(page);
+                });
+            }
+            console.log('实例输出bytes')
+            const pdfBytes = await mergedPDF.save()
+            console.log('bytes转blob')
+            const blob = new Blob([pdfBytes], {type: 'application/pdf'});
+
+            console.log('bytes转blob')
+            const link = document.createElement('a');
+            // 链接下载
+            link.href = URL.createObjectURL(blob);
+            // 链接预览
+            window.open(URL.createObjectURL(blob))
+        } catch (e) {
+            console.log(e, 'eee')
+        }
+    }
+</script>
+</html>
